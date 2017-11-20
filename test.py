@@ -1,4 +1,4 @@
-co2minimum=350
+co2minimum=370
 class Svet:
     zoznam_objektov=[]
     aktualny_cas=0
@@ -25,22 +25,31 @@ class Priestor(object):
     meno=""
     objem=0
     teplotaVzduchu=0
-    co2=0
+    hmotnost_co2=0
     zoznam_objektov=[]
     def __init__(self,meno,objem=0):
         self.meno=meno
         self.objem=self.objem+objem
         self.teplotaVzduchu = 0
-        self.co2 = 0
+        self.hmotnost_co2=co2minimum*1.8*self.objem
+        print("nastavil hmotnost co2 na",self.hmotnost_co2,"objem",self.objem)
         self.zoznam_objektov=[]
 
     def stav(self):
-        #self.objem=self.sucetObjemov()
-        #print("Priestor",self.meno,"o objeme",self.objem,"m3 je",self.teplotaVzduchu, "C a", self.co2,"ppm a obsahuje tieto priestory:")
+        print("v",self.meno,"je",self.hmotnost_co2,"mg, to je",self.koncentracia_co2(),"ppm v",self.objem,"m3 vzduchu")
         for objekt in self.zoznam_objektov:
             print("v",self.meno,"je",objekt.meno)
             objekt.stav()
+    def stavco2(self):
+        print("v",self.meno,"je",self.hmotnost_co2,"mg, to je",self.koncentracia_co2(),"ppm v",self.objem,"m3 vzduchu")
+        for objekt in self.zoznam_objektov:
+            objekt.stavco2()
 
+    def koncentracia_co2(self):
+        if ( self.objem > 0 ):
+            return (self.hmotnost_co2)/1.8/(self.objem)
+        else:
+            return 0
     def pridaj(self,objekt):
         print("pridal", objekt.meno, "do", self.meno)
         self.zoznam_objektov.append(objekt)
@@ -53,8 +62,12 @@ class Priestor(object):
 
     def krok_casu(self):
         print("krok_casu",self.meno)
+        self.stavco2()
         for objekt in self.zoznam_objektov:
-            objekt.krok_casu()
+            if isinstance(objekt,Clovek):
+                self.hmotnost_co2 += objekt.krok_casu()
+            else:
+                objekt.krok_casu()
 
 class Clovek:
     meno=""
@@ -63,11 +76,15 @@ class Clovek:
         print("Novy clovek!")
     def dychaj(self):
         # jeden 80kg clovek spravi 240kg co2/rok 27g/hodinu  0.46g/minutu
-        print("este neviem ako dychat")
+        # wiki 900g/den 37.5g/h 0.625g/m
+        print(self.meno,"dycham!")
+        return(625)
     def krok_casu(self):
-        self.dychaj()
+        return(self.dychaj())
     def stav(self):
         print(self.meno,"zijem")
+    def stavco2(self):
+        1+1
 
 class CO2meter:
     umiestnenie="nezname"
@@ -81,20 +98,21 @@ class CO2meter:
     def krok_casu(self):
         self.citaj()
 
+
 svet=Svet("svet")
 dom=Priestor("dom",0)
 svet.pridaj(dom)
 obyvacka=Priestor("obyvacka",96)
 spalna=Priestor("spalna",48)
-ja=Clovek("ja")
-spalna.pridaj(ja)
+clovek1=Clovek("clovek1")
+clovek2=Clovek("clovek2")
+spalna.pridaj(clovek1)
+spalna.pridaj(clovek2)
 dom.pridaj(obyvacka)
 dom.pridaj(spalna)
+#co2spalna=CO2meter(spalna)
+#co2spalna.citaj()
 #dom.stav()
-#dom.sucetObjemov()
-co2spalna=CO2meter(spalna)
-co2spalna.citaj()
-dom.stav()
 print(svet.aktualny_cas)
-svet.bez(10)
+svet.bez(480)
 print(svet.aktualny_cas)
